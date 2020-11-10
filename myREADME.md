@@ -6,8 +6,11 @@ ur_driver is not compatible with Polyscope v3.x and v5.x. Both ur_driver and ur_
 
 ## TLDR (How to use ROS Rviz MoveIt to control the realhardware)
 Terminal 1: `roslaunch ur_robot_driver <robot_type>_bringup.launch robot_ip:=192.168.1.11`
+
 Load and run external_control_test program on UR5 teaching pendant, now you should see `Robot ready to receive control commands.` on the first Terminal.
+
 Terminal 2: `roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch` to allow motion planning.
+
 Terminal 3: `roslaunch ur5_moveit_config moveit_rviz.launch config:=true` for starting up Rviz and MoveIt motion planning plugin. Now you should be able to plan and execute on Rviz MoveIt window. Please hold the emergency stop button while executing. 
 
 ## STEP 1: Building
