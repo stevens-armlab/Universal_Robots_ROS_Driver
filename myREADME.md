@@ -1,19 +1,69 @@
 README.md
 
-## Notes
+## UR5 Gazebo Simulation + MoveIt! Move Group Python Interface
+### Resources
+[MoveIt! official tutorial](http://docs.ros.org/en/melodic/api/moveit_tutorials/html/doc/move_group_python_interface/move_group_python_interface_tutorial.html), I use the Cartesian Paths method to give end-effector positions as waypoints. 
+
+### Known Issues
+- ```Skipping virtual joint 'fixed_base' because its child frame 'base_link' does not match the URDF frame 'world'```
+Issue solved by changing the ur5.srdf file `<virtual_joint name="fixed_base" type="fixed" parent_frame="world" child_link="world" />`. [Resource](https://github.com/ros-industrial/universal_robot/pull/284)
+- I have already fix this problem in the execute_trajectories.py, but I just want to document this [issue](https://answers.ros.org/question/328366/my_groupexecuteplan-waittrue-attributeerror/)
+
+### How to run
+
+- Terminal 1:
+
+```roscore```
+
+- Terminal 2: To bring up the simulated robot in Gazebo, run:
+
+```roslaunch ur_gazebo ur5.launch```
+
+- Terminal 3: For setting up the MoveIt! nodes to allow motion planning run:
+
+```roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch sim:=true```
+
+- Terminal 4: Run the python script
+
+```rosrun ur5_moveit_config execute_trajectories.py```
+
+
+
+## UR5 Gazebo Simulation + MoveIt! GUI Planning and Execution
+- First, open /ur5_moveit_config/config/controllers.yaml, edit the action_ns to: `action_ns: /follow_joint_trajectory`
+
+- Terminal 1: To bring up the simulated robot in Gazebo, run:
+
+```roslaunch ur_gazebo ur5.launch```
+
+- Terminal 2: For setting up the MoveIt! nodes to allow motion planning run:
+
+```roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch sim:=true```
+
+- Terminal 3: For starting up RViz with a configuration including the MoveIt! Motion Planning plugin run:
+
+```roslaunch ur5_moveit_config moveit_rviz.launch config:=true```
+
+
+
+## UR5 Hardware + ROS + MoveIt! GUI Planning and Execution
+
+### TLDR (How to use ROS Rviz MoveIt to control the realhardware)
+- First, open /ur5_moveit_config/config/controllers.yaml, edit the action_ns to: `action_ns: scaled_pos_joint_traj_controller/follow_joint_trajectory`
+
+- Terminal 1: `roslaunch ur_robot_driver <robot_type>_bringup.launch robot_ip:=192.168.1.11`
+
+- Load and run external_control_test program on UR5 teaching pendant, now you should see `Robot ready to receive control commands.` on the first Terminal.
+
+- Terminal 2: `roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch` to allow motion planning.
+
+- Terminal 3: `roslaunch ur5_moveit_config moveit_rviz.launch config:=true` for starting up Rviz and MoveIt motion planning plugin. Now you should be able to plan and execute on Rviz MoveIt window. Please hold the emergency stop button while executing. 
+
+### Notes
 
 ur_driver is not compatible with Polyscope v3.x and v5.x. Both ur_driver and ur_modern_driver are deprecated. Therefore, use ur_robot_driver instead.
 
-## TLDR (How to use ROS Rviz MoveIt to control the realhardware)
-Terminal 1: `roslaunch ur_robot_driver <robot_type>_bringup.launch robot_ip:=192.168.1.11`
-
-Load and run external_control_test program on UR5 teaching pendant, now you should see `Robot ready to receive control commands.` on the first Terminal.
-
-Terminal 2: `roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch` to allow motion planning.
-
-Terminal 3: `roslaunch ur5_moveit_config moveit_rviz.launch config:=true` for starting up Rviz and MoveIt motion planning plugin. Now you should be able to plan and execute on Rviz MoveIt window. Please hold the emergency stop button while executing. 
-
-## STEP 1: Building
+### STEP 1: Building
 
 **Note:** The driver consists of a [C++
 library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) that abstracts the
@@ -50,8 +100,8 @@ $ catkin_make
 $ source devel/setup.bash
 ```
 
-## STEP 2: Setting up a UR robot for ur_robot_driver
-### Prepare the robot
+### STEP 2: Setting up a UR robot for ur_robot_driver
+#### Prepare the robot
 For using the *ur_robot_driver* with a real robot you need to install the
 **externalcontrol-1.0.4.urcap** which can be found inside the **resources** folder of this driver.
 
@@ -65,11 +115,11 @@ robot](ur_robot_driver/doc/install_urcap_e_series.md).
 To setup the tool communication on an e-Series robot, please consider the [tool communication setup
 guide](ur_robot_driver/doc/setup_tool_communication.md).
 
-### Prepare the ROS PC
+#### Prepare the ROS PC
 For using the driver make sure it is installed (either by the debian package or built from source
 inside a catkin workspace).
 
-#### Extract calibration information
+##### Extract calibration information
 Each UR robot is calibrated inside the factory giving exact forward and inverse kinematics. To also
 make use of this in ROS, you first have to extract the calibration information from the robot.
 
@@ -88,7 +138,7 @@ For the parameter `robot_ip` insert the IP address on which the ROS pc can reach
 We recommend keeping calibrations for all robots in your organization in a common package. See the
 [package's documentation](ur_calibration/README.md) for details.
 
-#### Quick start
+##### Quick start
 Once the driver is built and the **externalcontrol** URCap is installed on the
 robot, you are good to go ahead starting the driver. (**Note**: We do
 recommend, though, to [extract your robot's
@@ -130,11 +180,11 @@ Use this with any client interface such as [MoveIt!](https://moveit.ros.org/) or
 rosrun rqt_joint_trajectory_controller rqt_joint_trajectory_controller
 ```
 
-## STEP 3: Modification needed
+### STEP 3: Modification needed
 
 This section will cover some modifications that I made in order to successfully control the UR5 robot with ROS Rviz MoveIt
 
-### Unable to identify any set of controllers that can actuate the specified joints: [ elbow_joint shoulder_lift_joint shoulder_pan_joint wrist_1_joint wrist_2_joint wrist_3_joint ]
+#### Unable to identify any set of controllers that can actuate the specified joints: [ elbow_joint shoulder_lift_joint shoulder_pan_joint wrist_1_joint wrist_2_joint wrist_3_joint ]
 Open "/fmauch_universal_robot/ur5_moveit_config/config/controllers.yaml", cope this line to replace whatever after action_ns: scaled_pos_joint_traj_controller/follow_joint_trajectory
 
 
